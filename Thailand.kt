@@ -6,12 +6,12 @@ import android.widget.AutoCompleteTextView
 import com.alibaba.fastjson.JSON
 
 class Thailand(
-    context: Context,
-    resId: Int,
-    val tvDistrict: AutoCompleteTextView,
-    val tvAmphoe: AutoCompleteTextView,
-    val tvProvince: AutoCompleteTextView,
-    val tvZipcode: AutoCompleteTextView
+    private val context: Context,
+    private val resId: Int,
+    private val tvDistrict: AutoCompleteTextView,
+    private val tvAmphoe: AutoCompleteTextView,
+    private val tvProvince: AutoCompleteTextView,
+    private val tvZipcode: AutoCompleteTextView
 ) {
     private var db: List<Address>
     private var itemsDistrict: ArrayList<String>
@@ -46,10 +46,10 @@ class Thailand(
                 setOnClickListener { if (text.isEmpty()) showDropDown() }
                 setOnFocusChangeListener { v, hasFocus ->
                     if (hasFocus) {
-                        val items = craftItems(label)
+                        val items = craftItems(label).map { it.get(label) }.distinct().sorted()
                         adaptItems.clear()
-                        adaptItems.addAll(items.map { it.get(label) }.distinct().sorted())
-                        adapt.notifyDataSetChanged()
+                        adaptItems.addAll(items)
+                        updateAdapter(label, adaptItems)
                         if (text.isEmpty()) v.post { showDropDown() }
                     }
                 }
@@ -94,6 +94,29 @@ class Thailand(
             if (t.isNotEmpty()) items = items.filter { it.zipcode.toString() == t }
         }
         return items
+    }
+
+    private fun updateAdapter(label: String, items: List<String>) {
+        val newAdapter = ArrayAdapter(context, resId, items)
+        when (label) {
+            "district" -> {
+                adaptDistrict = newAdapter
+                tvDistrict.setAdapter(adaptDistrict)
+            }
+            "amphoe" -> {
+                adaptAmphoe = newAdapter
+                tvAmphoe.setAdapter(adaptAmphoe)
+            }
+            "province" -> {
+                adaptProvince = newAdapter
+                tvProvince.setAdapter(adaptProvince)
+            }
+            "zipcode" -> {
+                adaptZipcode = newAdapter
+                tvZipcode.setAdapter(adaptZipcode)
+            }
+            "else" -> {}
+        }
     }
 
 }
